@@ -1,5 +1,18 @@
 {
   "dependencies": {
     "mongodb": "^6.5.0"
-  }
+  },
+  "name": "app",
+  "version": "1.0.0",
+  "main": "mongo.js",
+  "devDependencies": {},
+  "scripts": {
+    "start": "node mongo.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+    
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }

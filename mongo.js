@@ -1,61 +1,78 @@
+// Process the form and present the results online
 const http = require('http');
-const url = require('url');
 const fs = require('fs');
-const MongoClient = require('mongodb').MongoClient;
-
+const { MongoClient } = require('mongodb');
 const port = process.env.PORT || 3000;
-const connStr = "mongodb+srv://mdumon:mydb123@cluster0.rvujnyd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
+// Load the html file to display form
 http.createServer(function (req, res) {
-    res.writeHead(200, {'Content-Type': 'text/html'});
-
-    const urlObj = url.parse(req.url, true);
-    const path = urlObj.pathname;
-
-    if (path === "/") {
-        fs.readFile('form.html', function(err, form) {
+    if (req.url === "/") {
+        fs.readFile('form.html', function(err, html) {
             if (err) {
                 console.error("Error reading file:", err);
                 res.writeHead(500, {'Content-Type': 'text/plain'});
                 res.end("Error loading HTML file.");
             } else {
-                res.write(form);
-                res.end();
-            }
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                res.end(html);
+            } 
         });
-    } else if (path === "/process" && req.method === "GET") {
-        // Get the form data
-        const queryData = urlObj.query;
-        const searchTerm = queryData.searchTerm || '';
-        const searchType = queryData.searchType || 'name';
+    } else if (req.url.startsWith("/search") && req.method === "GET") {
+        const url = "mongodb+srv://mdumon:mydb123@cluster0.rvujnyd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+        const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
 
-        // Connect to MongoDB and perform database operations
-        MongoClient.connect(connStr, function(err, db) {
-            if (err) { 
-                console.log(err);
-                res.write("Error connecting to database");
-                res.end();
+        const queryData = new URLSearchParams(req.url.split('?')[1]);
+        // assign information from form to variables
+        const inputType = queryData.get('searchType');
+        const searchTerm = queryData.get('searchTerm');
+
+         // connect to database
+        client.connect().then(() => {
+            const database = client.db('Stock');
+            const collection = database.collection('PublicCompanies');
+            const query = inputType === "name" ? { "name": searchTerm } : {"ticker": searchTerm };
+            return collection.find(query).toArray();
+        }).then(docs => {
+          // Display results in this style depending on if there
+          // is a match in database or not
+            res.writeHead(200, {'Content-Type': 'text/html'});
+            res.write("<style>");
+            res.write("body {text-align: left; font-family: Arial, sans-serif;}")
+            res.write("h1 { color: #9181d4; }");
+            res.write("div { margin-bottom: 10px; text-align: center;  max-width: 400px; margin 40px auto;}");
+            res.write("p { color: #c28fdb; }");
+            res.write("</style>");
+            res.write("<h1>Search Results</h1>");
+            if (docs.length === 0) {
+                res.write("<p>No results found.</p>");
             } else {
-                const dbo = db.db("Stock");
-                const collection = dbo.collection('PublicCompanies');
-                
-                // Use searchType and searchTerm to query the database
-                const query = searchType === "symbol" ? { "ticker": searchTerm } : { "company": searchTerm };
-                
-                collection.find(query).toArray(function(err, result) {
-                    if (err) {
-                        console.log(err);
-                        res.write("Error fetching data from database");
-                        res.end();
-                    } else {
-                        console.log("Query Result:", result);
-                        res.write("Query Successful. Check console for results.");
-                        res.end();
+                docs.forEach(function(doc) {
+                    let companyName = 'N/A';
+                    let ticker = 'N/A';
+                    let price = 'N/A';
+                    if (doc.company) {
+                        companyName = doc.company;
                     }
-                    db.close();
+                    if (doc.ticker) {
+                        ticker = doc.ticker;
+                    }
+                    if (doc.price) {
+                        price = doc.price;
+                    }
+                    res.write("<div style='background-color: #f0f0f0; padding: 10px;'>");
+                    res.write(`<p>Company: ${companyName}, Ticker: ${ticker}, Price: ${price}</p>`);
+                    res.write("</div>");
                 });
             }
-        });
+            res.end();
+        // Error statements if connection fails
+        }).catch(err => {
+            console.error("Database query error:", err);
+            res.writeHead(500, {'Content-Type': 'text/plain'});
+            res.end("Database query error.");
+        }).finally(() => {
+            client.close();
+        }); 
     } else {
         res.writeHead(404, {'Content-Type': 'text/plain'});
         res.end("Not Found");

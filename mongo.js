@@ -24,9 +24,8 @@ http.createServer(function (req, res) {
             }
         });
 
-    } else if (req.url.startsWith("/process") && req.method === "GET") {
-        const searchTerm = urlObj.query.searchTerm || '';
-        const searchType = urlObj.query.searchType || 'name'; 
+    } else if (path === "/process" && req.method === "GET") {
+        console.log('hey'); // This line was added for testing purposes
 
         MongoClient.connect(connStr, function(err, db) {
             if (err) { 
@@ -34,31 +33,12 @@ http.createServer(function (req, res) {
                 res.write("Error connecting to database");
                 res.end();
             } else {
-                const dbo = db.db("Stock");
-                const collection = dbo.collection('PublicCompanies');
-                
-                const query = searchType === "symbol" ? { "ticker": searchTerm } : { "company": searchTerm };
-
-                collection.find(query).toArray(function(err, result) {
-                    if (err) {
-                        console.log(err);
-                        res.write("Error fetching data from database");
-                        res.end();
-                    } else {
-                        console.log("Success!");
-                        res.write("<h3>Search Results</h3>");
-                        result.forEach(function(doc) {
-                            res.write(`<p>Company: ${doc.company}, Symbol: ${doc.ticker}, Price: ${doc.price}</p>`);
-                        });
-                        res.end();
-                    }
-                    db.close();
-                });
+                const dbo = db.db("library");
+                const collection = dbo.collection('books');
+                console.log("Success!");
+                db.close();
             }
         });
-    } else {
-        res.writeHead(404, {'Content-Type': 'text/plain'});
-        res.end("Not Found");
     }
 }).listen(port, () => {
     console.log(`Server running on port ${port}`);

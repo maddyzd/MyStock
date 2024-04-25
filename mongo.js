@@ -8,10 +8,8 @@ const connStr = "mongodb+srv://mdumon:mydb123@cluster0.rvujnyd.mongodb.net/?retr
 
 http.createServer(function (req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    const urlObj = url.parse(req.url, true);
-    const path = urlObj.pathname;
 
-    if (path === "/") {
+    if (req.url === "/") {
         fs.readFile('form.html', function(err, form) {
             if (err) {
                 console.error("Error reading file:", err);
@@ -22,7 +20,7 @@ http.createServer(function (req, res) {
                 res.end();
             }
         });
-    } else if (path === "/process" && req.method === "GET") {
+    } else if (req.url === "/process" && req.method === "GET") {
         MongoClient.connect(connStr, function(err, db) {
             if (err) { 
                 console.log(err);
@@ -33,8 +31,9 @@ http.createServer(function (req, res) {
                 const collection = dbo.collection('PublicCompanies');
                 console.log("Connected to database");
 
-                  db.close();
-                });
+                // Perform database operations here if needed
+
+                db.close(); // Close the database connection
             }
         });
     } else {

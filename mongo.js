@@ -10,7 +10,7 @@ http.createServer(function (req, res) {
     var urlObj = url.parse(req.url, true); // Added 'var' keyword before 'urlObj'
     var path = urlObj.pathname;
 
-    if (path == "/") {
+    if (path == "/" ) {
         file = "form.html";
         fs.readFile(file, function(err, home) {
             if (err) {
@@ -22,34 +22,42 @@ http.createServer(function (req, res) {
                 res.end();
             }
         });
-    } else if (path == "/process") { // Corrected the else if syntax
-        MongoClient.connect(connStr, function(err, db) {
-            if (err) { 
-                console.log(err);
-                res.write("Error connecting to database");
-                res.end();
+    } else if (path == "/process" && req.method === "GET") {
+    var queryData = urlObj.query;
+    var searchTerm = queryData.searchTerm || '';
+    var searchType = queryData.searchType || 'name'; 
+
+    MongoClient.connect(connStr, function(err, db) {
+        if (err) { 
+            console.log(err);
+            res.write("Error connecting to database");
+            res.end();
+        } else {
+            var dbo = db.db("Stock");
+            var collection = dbo.collection('PublicCompanies');
+            var query = {};
+            if (searchType === "symbol") {
+                query = { "ticker": searchTerm };
             } else {
-                var dbo = db.db("Stock");
-                var collection = dbo.collection('PublicCompanies');
-                collection.find({}).toArray(function(err, result) {
-                    if (err) {
-                        console.log(err);
-                        res.write("Error fetching data from database");
-                        res.end();
-                    } else {
-                        console.log("Success!");
-                        res.write("<h3>Database Connection Successful!</h3>");
-                        res.write("<pre>" + JSON.stringify(result, null, 2) + "</pre>");
-                        res.end();
-                    }
-                    db.close();
-                });
+                query = { "company": searchTerm };
             }
-        });
-    } else {
-        res.writeHead(404, {'Content-Type': 'text/plain'});
-        res.end("Not Found");
-    }
-}).listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
+            
+            collection.find(query).toArray(function(err, result) {
+                if (err) {
+                    console.log(err);
+                    res.write("Error fetching data from database");
+                    res.end();
+                } else {
+                    console.log("Success!");
+                    console.log(result); // Print the result to console
+                    res.write("<h3>Search Results</h3>");
+                    result.forEach(function(doc) {
+                        res.write(`<p>Company: ${doc.company}, Symbol: ${doc.ticker}, Price: ${doc.price}</p>`);
+                    });
+                    res.end();
+                }
+                db.close();
+            });
+        }
+    });
+}

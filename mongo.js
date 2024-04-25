@@ -4,7 +4,7 @@ const fs = require('fs');
 const MongoClient = require('mongodb').MongoClient;
 
 const port = process.env.PORT || 3000;
-const connStr = "your_mongodb_connection_string"; // Replace with your actual MongoDB connection string
+const connStr = "mongodb+srv://mdumon:mydb123@cluster0.rvujnyd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 http.createServer(function (req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
@@ -23,7 +23,8 @@ http.createServer(function (req, res) {
                 res.end();
             }
         });
-    } else if (path === "/process" && req.method === "GET") {
+
+    } else if (req.url.startsWith("/process") && req.method === "GET") {
         const searchTerm = urlObj.query.searchTerm || '';
         const searchType = urlObj.query.searchType || 'name'; 
 

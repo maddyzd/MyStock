@@ -51,6 +51,7 @@ http.createServer(function (req, res) {
                     if (doc.price) {
                         price = doc.price;
                     }
+                    console.log(`Company: ${companyName}, Ticker: ${ticker}, Price: ${price}`); // Log to console
                     res.write(`<p>Company: ${companyName}, Ticker: ${ticker}, Price: ${price}</p>`);
                 });
             }

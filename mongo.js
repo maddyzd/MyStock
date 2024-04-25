@@ -1,4 +1,3 @@
-// Process the form and present the results online
 const http = require('http');
 const fs = require('fs');
 const { MongoClient } = require('mongodb');
@@ -33,15 +32,8 @@ http.createServer(function (req, res) {
             const query = inputType === "name" ? { "name": searchTerm } : {"ticker": searchTerm };
             return collection.find(query).toArray();
         }).then(docs => {
-          // Display results in this style depending on if there
-          // is a match in database or not
+          // Display results
             res.writeHead(200, {'Content-Type': 'text/html'});
-            res.write("<style>");
-            res.write("body {text-align: left; font-family: Arial, sans-serif;}")
-            res.write("h1 { color: #9181d4; }");
-            res.write("div { margin-bottom: 10px; text-align: center;  max-width: 400px; margin 40px auto;}");
-            res.write("p { color: #c28fdb; }");
-            res.write("</style>");
             res.write("<h1>Search Results</h1>");
             if (docs.length === 0) {
                 res.write("<p>No results found.</p>");
@@ -59,9 +51,7 @@ http.createServer(function (req, res) {
                     if (doc.price) {
                         price = doc.price;
                     }
-                    res.write("<div style='background-color: #f0f0f0; padding: 10px;'>");
                     res.write(`<p>Company: ${companyName}, Ticker: ${ticker}, Price: ${price}</p>`);
-                    res.write("</div>");
                 });
             }
             res.end();

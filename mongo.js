@@ -4,12 +4,15 @@ const fs = require('fs');
 const MongoClient = require('mongodb').MongoClient;
 
 const port = process.env.PORT || 3000;
-const connStr = "mongodb+srv://mdumon:mydb123@cluster0.rvujnyd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const connStr = "your_mongodb_connection_string"; // Replace with your actual MongoDB connection string
 
 http.createServer(function (req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
 
-    if (req.url === "/") {
+    const urlObj = url.parse(req.url, true);
+    const path = urlObj.pathname;
+
+    if (path === "/") {
         fs.readFile('form.html', function(err, form) {
             if (err) {
                 console.error("Error reading file:", err);
@@ -20,7 +23,10 @@ http.createServer(function (req, res) {
                 res.end();
             }
         });
-    } else if (req.url === "/process" && req.method === "GET") {
+    } else if (path === "/process" && req.method === "GET") {
+        const searchTerm = urlObj.query.searchTerm || '';
+        const searchType = urlObj.query.searchType || 'name'; 
+
         MongoClient.connect(connStr, function(err, db) {
             if (err) { 
                 console.log(err);
@@ -29,11 +35,24 @@ http.createServer(function (req, res) {
             } else {
                 const dbo = db.db("Stock");
                 const collection = dbo.collection('PublicCompanies');
-                console.log("Connected to database");
+                
+                const query = searchType === "symbol" ? { "ticker": searchTerm } : { "company": searchTerm };
 
-                // Perform database operations here if needed
-
-                db.close(); // Close the database connection
+                collection.find(query).toArray(function(err, result) {
+                    if (err) {
+                        console.log(err);
+                        res.write("Error fetching data from database");
+                        res.end();
+                    } else {
+                        console.log("Success!");
+                        res.write("<h3>Search Results</h3>");
+                        result.forEach(function(doc) {
+                            res.write(`<p>Company: ${doc.company}, Symbol: ${doc.ticker}, Price: ${doc.price}</p>`);
+                        });
+                        res.end();
+                    }
+                    db.close();
+                });
             }
         });
     } else {

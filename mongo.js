@@ -23,10 +23,6 @@ http.createServer(function (req, res) {
             }
         });
     } else if (path === "/process" && req.method === "GET") {
-        const queryData = urlObj.query;
-        const searchTerm = queryData.searchTerm || '';
-        const searchType = queryData.searchType || 'name'; 
-
         MongoClient.connect(connStr, function(err, db) {
             if (err) { 
                 console.log(err);
@@ -35,28 +31,9 @@ http.createServer(function (req, res) {
             } else {
                 const dbo = db.db("Stock");
                 const collection = dbo.collection('PublicCompanies');
-                let query = {};
-                if (searchType === "symbol") {
-                    query = { "ticker": searchTerm };
-                } else {
-                    query = { "company": searchTerm };
-                }
-                
-                collection.find(query).toArray(function(err, result) {
-                    if (err) {
-                        console.log(err);
-                        res.write("Error fetching data from database");
-                        res.end();
-                    } else {
-                        console.log("Success!");
-                        console.log(result); // Print the result to console
-                        res.write("<h3>Search Results</h3>");
-                        result.forEach(function(doc) {
-                            res.write(`<p>Company: ${doc.company}, Symbol: ${doc.ticker}, Price: ${doc.price}</p>`);
-                        });
-                        res.end();
-                    }
-                    db.close();
+                console.log("Connected to database");
+
+                  db.close();
                 });
             }
         });

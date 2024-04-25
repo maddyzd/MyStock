@@ -8,6 +8,7 @@
   "main": "mongo.js",
   "devDependencies": {},
   "scripts": {
+    "start": "node mongo.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

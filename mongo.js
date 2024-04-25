@@ -29,7 +29,7 @@ http.createServer(function (req, res) {
         client.connect().then(() => {
             const database = client.db('Stock');
             const collection = database.collection('PublicCompanies');
-            const query = inputType === "name" ? { "name": searchTerm } : {"ticker": searchTerm };
+            const query = inputType === "name" ? { "company": searchTerm } : {"ticker": searchTerm };
             return collection.find(query).toArray();
         }).then(docs => {
           // Display results

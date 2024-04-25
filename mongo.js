@@ -34,7 +34,7 @@ http.createServer(function (req, res) {
         }).then(docs => {
           // Display results
             res.writeHead(200, {'Content-Type': 'text/html'});
-            res.write("<h1>Search Results</h1>");
+            res.write("<h1>Results</h1>");
             if (docs.length === 0) {
                 res.write("<p>No results found.</p>");
             } else {

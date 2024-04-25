@@ -16,7 +16,7 @@ http.createServer(function (req, res) {
                 res.end(html);
             } 
         });
-    } else if (req.url.startsWith("/search") && req.method === "GET") {
+    } else if (req.url.startsWith("/process") && req.method === "GET") {
         const url = "mongodb+srv://mdumon:mydb123@cluster0.rvujnyd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
         const client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
 
